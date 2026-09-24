@@ -31,7 +31,7 @@ def home_screen():
     st.markdown(
         f'<p style="text-align:center; max-width:680px; margin:0 auto 28px auto; color:{t["text_secondary"]}; font-size:1rem;">'
         'Present Call eliminates manual roll calls and proxy attendance using AI-powered '
-        'face and voice recognition. One photo, one audio clip — attendance done.'
+        'face and voice recognition. One photo, one audio clip - attendance done.'
         '</p>',
         unsafe_allow_html=True
     )

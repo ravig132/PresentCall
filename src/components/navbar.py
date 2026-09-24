@@ -4,7 +4,7 @@ from src.components.header import _logo
 
 
 def top_navbar():
-    """Persistent top navigation bar — rendered first on every screen
+    """Persistent top navigation bar - rendered first on every screen
     (Home, About, Student, Teacher). Theme toggle always sits far right."""
     t = theme_colors()
 

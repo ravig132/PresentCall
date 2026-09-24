@@ -1,9 +1,5 @@
 import streamlit as st
 
-# ============================================================
-# THEME SYSTEM — palette restricted to black, grey, white, sky blue.
-# ============================================================
-
 THEMES = {
     'light': {
         'bg':             '#F3F4F6',
