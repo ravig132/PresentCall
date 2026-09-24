@@ -4,16 +4,20 @@ import streamlit as st
 from src.screens.home_screen import home_screen
 from src.screens.teacher_screen import teacher_screen
 from src.screens.student_screen import student_screen
+from src.screens.about_screen import about_screen
 
 from src.components.dialog_auto_enroll import auto_enroll_dialog
 
 def main():
     st.set_page_config(
-        page_title='SnapClass - Making Attendance faster using AI',
-        page_icon= "https://i.ibb.co/YTYGn5qV/logo.png"
+        page_title='Present Call — AI Intelligent Attendance System',
+        page_icon="assets/favicon.png",
+        layout='wide'
     )
     if 'login_type' not in st.session_state:
         st.session_state['login_type'] = None
+    if 'page' not in st.session_state:
+        st.session_state['page'] = 'home'
 
     match st.session_state['login_type']:
         case 'teacher':
@@ -21,9 +25,12 @@ def main():
 
         case 'student':
             student_screen()
-        
+
         case None:
-            home_screen()
+            if st.session_state['page'] == 'about':
+                about_screen()
+            else:
+                home_screen()
 
 
     join_code = st.query_params.get('join-code')
