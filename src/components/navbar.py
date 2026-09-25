@@ -2,14 +2,16 @@ import streamlit as st
 from src.ui.base_layout import theme_colors, theme_toggle_button
 from src.components.header import _logo
 
+LANDING_PAGE_URL = "https://present-call.vercel.app/"
+
 
 def top_navbar():
     """Persistent top navigation bar - rendered first on every screen
     (Home, About, Student, Teacher). Theme toggle always sits far right."""
     t = theme_colors()
 
-    logo_col, home_col, about_col, student_col, teacher_col, spacer, toggle_col = st.columns(
-        [2.4, 0.9, 0.9, 1.5, 1.5, 1.5, 0.6]
+    logo_col, back_col, home_col, about_col, student_col, teacher_col, spacer, toggle_col = st.columns(
+        [2.0, 1.3, 0.8, 0.8, 1.3, 1.3, 1.0, 0.6]
     )
 
     with logo_col:
@@ -20,6 +22,10 @@ def top_navbar():
 </div>
 """
         st.markdown(html, unsafe_allow_html=True)
+
+    with back_col:
+        st.link_button('Website', LANDING_PAGE_URL, type='tertiary', width='stretch',
+                        icon=':material/arrow_back:')
 
     with home_col:
         if st.button('Home', key='nav_home', type='tertiary', width='stretch'):

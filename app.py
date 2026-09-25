@@ -19,6 +19,16 @@ def main():
     if 'page' not in st.session_state:
         st.session_state['page'] = 'home'
 
+    # Deep-link support: the external landing page (present-call.vercel.app)
+    # can link directly to https://presentcall.streamlit.app/?portal=student
+    # or ?portal=teacher to skip the chooser entirely. Only applied once,
+    # on first load, so it doesn't fight with in-app navigation afterwards.
+    if not st.session_state.get('_portal_param_checked'):
+        st.session_state['_portal_param_checked'] = True
+        portal_param = st.query_params.get('portal')
+        if portal_param in ('student', 'teacher'):
+            st.session_state['login_type'] = portal_param
+
     match st.session_state['login_type']:
         case 'teacher':
             teacher_screen()

@@ -1,5 +1,9 @@
 import streamlit as st
 
+# ============================================================
+# THEME SYSTEM — palette restricted to black, grey, white, sky blue.
+# ============================================================
+
 THEMES = {
     'light': {
         'bg':             '#F3F4F6',
@@ -51,7 +55,13 @@ def style_background_home():
     st.markdown(f"""
         <style>
         .stApp {{ background: {t['bg']} !important; }}
-        .stApp div[data-testid="stColumn"] {{
+
+        /* Card look scoped ONLY to the hero CTA cards, which home_screen.py
+           wraps in st.container(key="hero_cards"). This must NOT be a bare
+           "div[data-testid=stColumn]" rule, or it also re-styles every
+           other st.columns() on this page -- including the navbar's slim
+           button columns -- turning them into bulky padded pills. */
+        .st-key-hero_cards div[data-testid="stColumn"] {{
             background-color: {t['surface']} !important;
             padding: 2rem !important;
             border-radius: 1.6rem !important;
@@ -136,11 +146,24 @@ def style_base_layout():
         }}
         button:active {{ filter: brightness(0.92); transform: scale(0.99); }}
 
-        /* Neutralize Streamlit's own hover/focus fill layered under our buttons */
         [data-testid^="stBaseButton"] {{ box-shadow: none !important; }}
         [data-testid^="stBaseButton"]:hover {{ box-shadow: none !important; background-image: none !important; }}
 
         [data-testid="stDataFrame"] {{ border-radius: 1rem !important; overflow: hidden; }}
+
+        /* ---------- Camera input: constrain size so the capture button
+           is never pushed below the fold ---------- */
+        [data-testid="stCameraInput"] {{
+            max-width: 480px !important;
+            margin: 0 auto !important;
+        }}
+        [data-testid="stCameraInput"] video,
+        [data-testid="stCameraInput"] img {{
+            max-height: 360px !important;
+            width: 100% !important;
+            object-fit: cover !important;
+            border-radius: 16px !important;
+        }}
 
         /* ---------- Responsive tweaks ---------- */
         @media (max-width: 640px) {{
