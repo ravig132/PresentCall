@@ -3,7 +3,7 @@
 Present Call eliminates manual roll calls and proxy attendance using AI-powered
 face and voice recognition. A teacher captures one group photo (or one
 classroom audio clip), and the system automatically detects, matches, and
-logs every present student - no calling names, no impersonation.
+logs every present student - no calling names, no impersonation
 
 ---
 
@@ -24,6 +24,7 @@ logs every present student - no calling names, no impersonation.
   system across every page.
 
 ---
+
 
 ## 🧱 Tech Stack
 
@@ -54,5 +55,17 @@ logs every present student - no calling names, no impersonation.
    once.
 5. Results are shown to the teacher for review before being saved to
    `attendance_logs`.
+
+---
+
+## 🚧 Known Limitations / Roadmap
+
+- No liveness detection yet - a printed photo can currently be used to
+  spoof face recognition. Planned for a future phase.
+- Voice attendance accuracy drops in noisy or overlapping classroom audio.
+- Large classes (60+ students) in one photo may reduce per-face
+  resolution and accuracy.
+- Responsive design has been tested at a few breakpoints but not
+  exhaustively across all devices.
 
 ---
