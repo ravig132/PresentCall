@@ -1,18 +1,29 @@
-from resemblyzer import VoiceEncoder, preprocess_wav
+try:
+    from resemblyzer import VoiceEncoder, preprocess_wav
+    import librosa
+except ImportError:
+    VoiceEncoder = None
+    preprocess_wav = None
+    librosa = None
+
 import numpy as np 
 import io
-import librosa
 import streamlit as st
 
 
 @st.cache_resource
 def load_voice_encoder():
+    if VoiceEncoder is None:
+        return None
     return VoiceEncoder()
 
 
 def get_voice_embedding(audio_bytes):
     try:
         encoder = load_voice_encoder()
+        if encoder is None or librosa is None or preprocess_wav is None:
+            st.warning("Voice recognition packages (resemblyzer / librosa) not installed in current environment.")
+            return None
 
         audio, sr = librosa.load(io.BytesIO(audio_bytes), sr=16000)
         wav = preprocess_wav(audio)
@@ -45,9 +56,11 @@ def identify_speaker(new_embedding, candidates_dict, threshold=0.65):
 
 
 def process_bulk_audio(audio_bytes, candidates_dict, threshold=0.65):
-
     try:
         encoder = load_voice_encoder()
+        if encoder is None or librosa is None or preprocess_wav is None:
+            st.warning("Voice recognition packages (resemblyzer / librosa) not installed in current environment.")
+            return {}
 
         audio, sr = librosa.load(io.BytesIO(audio_bytes), sr=16000)
         segments = librosa.effects.split(audio, top_db=30)

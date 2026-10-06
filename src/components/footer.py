@@ -1,28 +1,21 @@
 import streamlit as st
-from src.ui.base_layout import theme_colors
-
+from src.components.header import _logo
 
 def _render_footer():
-    t = theme_colors()
-
-    # NOTE: HTML lines start at column 0 on purpose — indenting them causes
-    # Streamlit's Markdown parser to render raw text instead of HTML.
     html = f"""
-<div style="margin-top:2.5rem; text-align:center; padding:1.2rem 0; border-top:1px solid {t['border']};">
-<p style="font-family:'Inter', sans-serif; font-size:0.9rem; color:{t['text_secondary']}; margin-bottom:2px;">
-Designed by <a href="https://p-vijay.vercel.app/" target="_blank" style="color:{t['accent']}; text-decoration:none; font-weight:600;">P-Vijay</a> with a cup of tea 🍵
-</p>
-</div>
-"""
-    # Add more links here as needed (keep every new line flush at column 0):
-    #
-    # html += """
-    # <p style="margin-top:6px; font-size:0.8rem;">
-    # <a href="https://github.com/your-repo" target="_blank">GitHub</a> ·
-    # <a href="mailto:you@example.com">Contact</a>
-    # </p>
-    # """
-
+    <div style="margin-top:3.5rem; text-align:center; padding:1.8rem 0 1rem 0; border-top:1px solid #E2E8F0;">
+        <div style="display:flex; align-items:center; justify-content:center; gap:8px; margin-bottom:4px;">
+            {_logo(24)}
+            <span style="font-family:'Space Grotesk', sans-serif; font-weight:700; font-size:0.95rem; color:#0F172A; letter-spacing:0.02em;">PRESENT CALL</span>
+        </div>
+        <p style="font-family:'Inter', sans-serif; font-size:0.8rem; color:#64748B; margin:2px 0 6px 0;">
+            AI-powered attendance management system · Institutional Enterprise Edition
+        </p>
+        <div style="font-size:0.75rem; color:#94A3B8;">
+            © Present Call · Designed for modern academic and enterprise institutions
+        </div>
+    </div>
+    """
     st.markdown(html, unsafe_allow_html=True)
 
 

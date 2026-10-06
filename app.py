@@ -12,7 +12,8 @@ def main():
     st.set_page_config(
         page_title='Present Call — AI Intelligent Attendance System',
         page_icon="assets/favicon.png",
-        layout='wide'
+        layout='wide',
+        initial_sidebar_state='expanded'
     )
     if 'login_type' not in st.session_state:
         st.session_state['login_type'] = None

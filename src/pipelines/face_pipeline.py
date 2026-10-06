@@ -1,7 +1,12 @@
 
-import dlib
+try:
+    import dlib
+    import face_recognition_models
+except ImportError:
+    dlib = None
+    face_recognition_models = None
+
 import numpy as np
-import face_recognition_models
 from sklearn.svm import SVC
 import streamlit as st
 
@@ -10,8 +15,10 @@ from src.database.db import get_all_students
 
 @st.cache_resource
 def load_dlib_models():
-    detector = dlib.get_frontal_face_detector() 
+    if dlib is None or face_recognition_models is None:
+        return None, None, None
 
+    detector = dlib.get_frontal_face_detector() 
 
     sp = dlib.shape_predictor(
         face_recognition_models.pose_predictor_model_location()
@@ -25,6 +32,9 @@ def load_dlib_models():
 
 def get_face_embeddings(image_np):
     detector, sp, facerec = load_dlib_models()
+    if detector is None:
+        st.warning("Facial recognition engine (dlib) is not installed in current environment.")
+        return []
     faces = detector(image_np, 1)
 
     encodings= []
