@@ -84,7 +84,9 @@ def get_student_subjects(student_id):
 
 
 def get_student_attendance(student_id):
-    response = supabase.table('attendance_logs').select('*, subjects(*)').eq('student_id', student_id).execute()
+    response = supabase.table('attendance_logs').select(
+        '*, subjects(*)'
+    ).eq('student_id', student_id).execute()
     return response.data
 
 
@@ -93,6 +95,23 @@ def create_attendance(logs):
     return response.data
 
 def get_attendance_for_teacher(teacher_id):
-    response = supabase.table('attendance_logs').select("*, subjects!inner(*)").eq('subjects.teacher_id', teacher_id).execute()
+    response = supabase.table('attendance_logs').select(
+        "*, subjects!inner(*), students(student_id, name)"
+    ).eq('subjects.teacher_id', teacher_id).execute()
     return response.data
 
+
+def get_subject_students(subject_id):
+    response = supabase.table('subject_students').select(
+        "student_id, students(student_id, name, face_embedding, voice_embedding)"
+    ).eq('subject_id', subject_id).execute()
+    return response.data
+
+
+def get_teacher_names(teacher_ids):
+    if not teacher_ids:
+        return {}
+    response = supabase.table('teachers').select(
+        'teacher_id, name'
+    ).in_('teacher_id', list(set(teacher_ids))).execute()
+    return {teacher['teacher_id']: teacher['name'] for teacher in response.data}

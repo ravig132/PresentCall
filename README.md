@@ -20,8 +20,27 @@ logs every present student - no calling names, no impersonation
   students.
 - **Live attendance analytics** - subject-wise attendance percentage,
   history, and records for both roles.
+- **Teacher operations and management** - dashboard with recent verification
+  activity, AI face attendance, VoiceID roll-call, detailed attendance
+  records, student directory, subject management, and a session-persistent
+  face match threshold.
+- **Student portal** - dashboard, subject-wise attendance, detailed attendance
+  records, and biometric enrollment status.
+- **Attendance exports** - one detailed CSV export with student, subject,
+  teacher, timestamp, method, confidence, and status fields.
 - **Light/Dark theme toggle**, consistent navigation, and a unified design
   system across every page.
+
+---
+
+## Database migration
+
+Before using verification methods and confidence in attendance records, run
+[`migrations/20261006_attendance_verification_metadata.sql`](./migrations/20261006_attendance_verification_metadata.sql)
+against the Supabase database. It adds nullable `method` and `confidence`
+columns to `attendance_logs`, so existing records remain valid. Face and voice
+attendance will then store the method and a distance/similarity-derived score;
+these scores are estimates, not calibrated probabilities.
 
 ---
 

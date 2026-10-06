@@ -80,7 +80,10 @@ def _distance_to_confidence(distance, threshold=0.6):
     return round(max(0.0, min(100.0, conf)), 1)
 
 
-def predict_attendance(class_image_np):
+def predict_attendance(class_image_np, resemblance_threshold=0.6):
+    if resemblance_threshold <= 0:
+        raise ValueError("The face match threshold must be greater than zero.")
+
     encodings = get_face_embeddings(class_image_np)
 
     detected_student = {}
@@ -106,8 +109,6 @@ def predict_attendance(class_image_np):
         student_embedding = X_train[y_train.index(predicted_id)]
 
         best_match_score = np.linalg.norm(student_embedding - encoding)
-
-        resemblance_threshold = 0.6
 
         if best_match_score <= resemblance_threshold:
             confidence = _distance_to_confidence(best_match_score, resemblance_threshold)
