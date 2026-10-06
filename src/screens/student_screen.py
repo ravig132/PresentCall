@@ -13,6 +13,9 @@ import time
 
 from src.components.dialog_enroll import enroll_dialog
 from src.components.subject_card import subject_card
+from src.components.stat_card import stat_row
+import pandas as pd
+from datetime import datetime
 
 
 def student_dashboard():
@@ -22,6 +25,15 @@ def student_dashboard():
     c1, c2 = st.columns([3, 1], vertical_alignment='center')
     with c1:
         st.subheader(f"""Welcome, {student_data['name']} """)
+        has_face = bool(student_data.get('face_embedding'))
+        has_voice = bool(student_data.get('voice_embedding'))
+        badge_html = (
+            f'<span style="font-size:0.8rem; margin-right:10px;">'
+            f'{"✅" if has_face else "⚠️"} FaceID {"Registered" if has_face else "Not Registered"}</span>'
+            f'<span style="font-size:0.8rem;">'
+            f'{"✅" if has_voice else "⚠️"} VoiceID {"Registered" if has_voice else "Not Registered"}</span>'
+        )
+        st.markdown(badge_html, unsafe_allow_html=True)
     with c2:
         if st.button("Logout", type='secondary', key='loginbackbtn', width='stretch', shortcut="control+backspace"):
             st.session_state['is_logged_in'] = False
@@ -30,16 +42,7 @@ def student_dashboard():
 
     st.space()
 
-    c1, c2 = st.columns(2)
-    with c1:
-        st.header('Your Enrolled Subjects')
-    with c2:
-        if st.button('Enroll in Subject', type='primary', width='stretch'):
-            enroll_dialog()
-
-    st.divider()
-
-    with st.spinner('Loading your enrolled subjects..'):
+    with st.spinner('Loading your attendance..'):
         subjects = get_student_subjects(student_id)
         logs = get_student_attendance(student_id)
 
@@ -56,6 +59,62 @@ def student_dashboard():
         if log.get('is_present'):
             stats_map[sid]['attended'] += 1
 
+    total_classes = sum(s['total'] for s in stats_map.values())
+    total_attended = sum(s['attended'] for s in stats_map.values())
+    overall_pct = round((total_attended / total_classes) * 100, 1) if total_classes else 0.0
+
+    stat_row([
+        ('📊', 'Overall Attendance', f'{overall_pct}%',
+         f'{total_attended} / {total_classes} classes'),
+        ('📚', 'Enrolled Subjects', len(subjects)),
+        ('✅', 'Classes Attended', total_attended),
+    ])
+
+    # ---------- Attendance trend ----------
+    log_rows = []
+    for log in logs:
+        ts = log.get('timestamp')
+        if ts:
+            log_rows.append({'date': pd.to_datetime(ts.split('.')[0]).date(), 'is_present': bool(log.get('is_present'))})
+
+    if log_rows:
+        trend_df = pd.DataFrame(log_rows)
+        daily = trend_df.groupby('date')['is_present'].mean().reset_index()
+        daily['Attendance %'] = (daily['is_present'] * 100).round(1)
+        daily = daily.sort_values('date').tail(7)
+
+        if len(daily) >= 2:
+            st.space()
+            st.subheader('Your Attendance Trend')
+            st.line_chart(daily.set_index('date')['Attendance %'])
+
+    # ---------- Recent activity ----------
+    recent_logs = sorted(
+        [l for l in logs if l.get('timestamp')],
+        key=lambda l: l['timestamp'], reverse=True
+    )[:5]
+
+    if recent_logs:
+        st.space()
+        st.subheader('Recent Activity')
+        recent_df = pd.DataFrame([{
+            'Subject': l.get('subjects', {}).get('name', '-'),
+            'Date': datetime.fromisoformat(l['timestamp'].split('.')[0]).strftime('%b %d, %I:%M %p'),
+            'Status': '✅ Present' if l.get('is_present') else '❌ Absent',
+        } for l in recent_logs])
+        st.dataframe(recent_df, width='stretch', hide_index=True)
+
+    st.space()
+
+    c1, c2 = st.columns(2)
+    with c1:
+        st.header('Your Enrolled Subjects')
+    with c2:
+        if st.button('Enroll in Subject', type='primary', width='stretch'):
+            enroll_dialog()
+
+    st.divider()
+
     cols = st.columns(2)
     for i, sub_node in enumerate(subjects):
         sub = sub_node['subjects']
@@ -69,6 +128,8 @@ def student_dashboard():
                 st.toast(f'Unenrolled from {sub["name"]} successfully!')
                 st.rerun()
 
+        subject_pct = round((stats['attended'] / stats['total']) * 100) if stats['total'] else 0
+
         with cols[i % 2]:
             subject_card(
                 name=sub['name'],
@@ -80,6 +141,7 @@ def student_dashboard():
                 ],
                 footer_callback=unenroll_button
             )
+            st.progress(subject_pct / 100, text=f'{subject_pct}% attendance')
     footer_dashboard()
 
 

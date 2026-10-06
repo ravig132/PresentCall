@@ -1,6 +1,7 @@
 import streamlit as st
 from src.components.navbar import top_navbar
 from src.components.footer import footer_home
+from src.components.stat_card import stat_row
 from src.ui.base_layout import style_base_layout, style_background_dashboard, theme_colors
 
 
@@ -32,7 +33,7 @@ def about_screen():
         f'<p style="color:{t["text_secondary"]}; max-width:820px; font-size:1rem;">'
         'Present Call is an AI-powered attendance platform built for schools and colleges. '
         'It replaces manual roll calls and proxy attendance with automated face and voice '
-        'recognition - one group photo or one audio clip is enough to mark an entire class present.'
+        'recognition — one group photo or one audio clip is enough to mark an entire class present.'
         '</p>',
         unsafe_allow_html=True
     )
@@ -41,9 +42,9 @@ def about_screen():
     with c1:
         st.subheader('Who can use it?')
         st.markdown(
-            "- **Students** - enroll once with a selfie (and optionally a voice sample), "
+            "- **Students** — enroll once with a selfie (and optionally a voice sample), "
             "then check attendance anytime.\n"
-            "- **Teachers** - create subjects, share a join code, and take attendance "
+            "- **Teachers** — create subjects, share a join code, and take attendance "
             "with one photo or one audio clip."
         )
     with c2:
@@ -54,6 +55,22 @@ def about_screen():
             "the enrolled class roster using deep learning embeddings, removes duplicate "
             "detections, and logs attendance automatically."
         )
+
+    st.divider()
+
+    st.header('Engine Specs')
+    st.markdown(
+        f'<p style="color:{t["text_secondary"]}; font-size:0.9rem; margin-bottom:14px;">'
+        'The real architecture behind Present Call — no inflated numbers, just what the models actually output.'
+        '</p>',
+        unsafe_allow_html=True
+    )
+    stat_row([
+        ('👁️', 'Face Embedding', '128-d', 'dlib ResNet descriptor'),
+        ('🎙️', 'Voice Embedding', '256-d', 'Resemblyzer d-vector'),
+        ('🔐', 'Auth', 'bcrypt', 'Salted password hashing'),
+        ('☁️', 'Database', 'Supabase', 'PostgreSQL + Row Level Security'),
+    ])
 
     st.divider()
 

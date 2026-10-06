@@ -22,6 +22,7 @@ from src.database.config import supabase
 
 
 from src.components.dialog_voice_attendance import voice_attendance_dialog
+from src.components.stat_card import stat_row
 
 
 def teacher_screen():
@@ -48,6 +49,28 @@ def teacher_dashboard():
             st.session_state['is_logged_in'] = False
             del st.session_state.teacher_data
             st.rerun()
+
+    st.space()
+
+    with st.spinner('Loading overview..'):
+        overview_subjects = get_teacher_subjects(teacher_data['teacher_id'])
+        overview_records = get_attendance_for_teacher(teacher_data['teacher_id'])
+
+    total_subjects = len(overview_subjects)
+    total_students = sum(s.get('total_students', 0) for s in overview_subjects)
+    total_classes = sum(s.get('total_classes', 0) for s in overview_subjects)
+
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    today_records = [r for r in (overview_records or []) if r.get('timestamp', '').startswith(today_str)]
+    present_today = sum(1 for r in today_records if r.get('is_present'))
+    absent_today = sum(1 for r in today_records if not r.get('is_present'))
+
+    stat_row([
+        ('🏫', 'Active Subjects', total_subjects),
+        ('🫂', 'Total Students', total_students),
+        ('✅', 'Present Today', present_today),
+        ('❌', 'Absent Today', absent_today),
+    ])
 
     st.space()
 
@@ -133,16 +156,20 @@ def teacher_tab_take_attendance():
         if st.button('Run Face Analysis', width='stretch', type='secondary', icon=':material/analytics:', disabled=not has_photos):
             with st.spinner('Deep scanning classroom photos...'):
                 all_detected_ids = {}
+                all_detected_scores = {}
 
                 for idx, img in enumerate(st.session_state.attendance_images):
                     img_np = np.array(img.convert('RGB'))
                     detected, _, _ = predict_attendance(img_np)
 
                     if detected:
-                        for sid in detected.keys():
+                        for sid, confidence in detected.items():
                             student_id = int(sid)
 
                             all_detected_ids.setdefault(student_id, []).append(f"Photo {idx+1}")
+                            all_detected_scores[student_id] = max(
+                                all_detected_scores.get(student_id, 0), confidence
+                            )
 
                 enrolled_res = supabase.table('subject_students').select("*, students(*)").eq('subject_id', selected_subject_id).execute()
                 enrolled_students = enrolled_res.data
@@ -157,13 +184,16 @@ def teacher_tab_take_attendance():
 
                     for node in enrolled_students:
                         student = node['students']
-                        sources = all_detected_ids.get(int(student['student_id']), [])
+                        sid_int = int(student['student_id'])
+                        sources = all_detected_ids.get(sid_int, [])
                         is_present = len(sources) > 0
+                        confidence = all_detected_scores.get(sid_int)
 
                         results.append({
                             "Name": student['name'],
                             "ID": student['student_id'],
                             "Source": ", ".join(sources) if is_present else "-",
+                            "Match Confidence": f"{confidence}%" if confidence is not None else "-",
                             "Status": "✅ Present" if is_present else "❌ Absent"
                         })
 
@@ -223,6 +253,7 @@ def teacher_tab_attendance_records():
     records = get_attendance_for_teacher(teacher_id)
 
     if not records:
+        st.info("No attendance has been recorded yet.")
         return
 
     data = []
@@ -240,6 +271,18 @@ def teacher_tab_attendance_records():
 
     df = pd.DataFrame(data)
 
+    # ---------- Weekly attendance trend ----------
+    df['date'] = pd.to_datetime(df['ts_group']).dt.date
+    daily = df.groupby('date')['is_present'].mean().reset_index()
+    daily['Attendance %'] = (daily['is_present'] * 100).round(1)
+    daily = daily.sort_values('date').tail(7)
+
+    if len(daily) >= 2:
+        st.subheader('Weekly Attendance Trend')
+        st.line_chart(daily.set_index('date')['Attendance %'])
+        st.space()
+
+    # ---------- Session summary table ----------
     summary = (
         df.groupby(['ts_group', 'Time', 'Subject', 'Subject Code'])
         .agg(
@@ -253,11 +296,39 @@ def teacher_tab_attendance_records():
         + summary['Total_Count'].astype(str) + ' Students'
     )
 
-    display_df = (summary.sort_values(by='ts_group', ascending=False)
-                  [['Time', 'Subject', 'Subject Code', 'Attendance Stats']]
-                  )
+    full_df = (summary.sort_values(by='ts_group', ascending=False)
+               [['Time', 'Subject', 'Subject Code', 'Attendance Stats']]
+               )
 
-    st.dataframe(display_df, width='stretch', hide_index=True)
+    c1, c2 = st.columns([2, 1])
+    with c1:
+        search = st.text_input('Search by subject name or code', placeholder='e.g. CS101')
+    with c2:
+        subject_options = ['All Subjects'] + sorted(full_df['Subject'].unique().tolist())
+        subject_filter = st.selectbox('Filter by subject', options=subject_options)
+
+    display_df = full_df.copy()
+    if subject_filter != 'All Subjects':
+        display_df = display_df[display_df['Subject'] == subject_filter]
+    if search:
+        mask = (
+            display_df['Subject'].str.contains(search, case=False, na=False)
+            | display_df['Subject Code'].str.contains(search, case=False, na=False)
+        )
+        display_df = display_df[mask]
+
+    if display_df.empty:
+        st.info('No records match your search/filter.')
+    else:
+        st.dataframe(display_df, width='stretch', hide_index=True)
+
+    st.download_button(
+        'Export CSV',
+        data=full_df.to_csv(index=False).encode('utf-8'),
+        file_name='attendance_records.csv',
+        mime='text/csv',
+        icon=':material/download:'
+    )
 
 
 def login_teacher(username, password):

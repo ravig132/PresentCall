@@ -10,7 +10,7 @@ from src.components.dialog_auto_enroll import auto_enroll_dialog
 
 def main():
     st.set_page_config(
-        page_title='Present Call - AI Intelligent Attendance System',
+        page_title='Present Call — AI Intelligent Attendance System',
         page_icon="assets/favicon.png",
         layout='wide'
     )

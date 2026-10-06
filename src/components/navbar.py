@@ -6,7 +6,7 @@ LANDING_PAGE_URL = "https://present-call.vercel.app/"
 
 
 def top_navbar():
-    """Persistent top navigation bar - rendered first on every screen
+    """Persistent top navigation bar — rendered first on every screen
     (Home, About, Student, Teacher). Theme toggle always sits far right."""
     t = theme_colors()
 

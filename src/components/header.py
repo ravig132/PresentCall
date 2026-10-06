@@ -15,7 +15,7 @@ def _logo(size=90):
 
 
 def hero_header():
-    """Big landing-page hero. Used only on the Home screen - every other
+    """Big landing-page hero. Used only on the Home screen — every other
     screen uses the compact top_navbar() instead."""
     t = theme_colors()
     html = f"""

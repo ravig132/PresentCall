@@ -1,5 +1,4 @@
 
-
 import dlib
 import numpy as np
 import face_recognition_models
@@ -72,6 +71,15 @@ def train_classifier():
     model_data = get_trained_model()
     return bool(model_data)
 
+
+def _distance_to_confidence(distance, threshold=0.6):
+    """Converts an L2 embedding distance into an approximate 0-100 match
+    confidence. This is a simple derived score for display purposes
+    (closer embeddings => higher %), not a calibrated probability."""
+    conf = (1 - (distance / (threshold * 2))) * 100
+    return round(max(0.0, min(100.0, conf)), 1)
+
+
 def predict_attendance(class_image_np):
     encodings = get_face_embeddings(class_image_np)
 
@@ -102,6 +110,9 @@ def predict_attendance(class_image_np):
         resemblance_threshold = 0.6
 
         if best_match_score <= resemblance_threshold:
-            detected_student[predicted_id] = True
+            confidence = _distance_to_confidence(best_match_score, resemblance_threshold)
+            # Keep the highest confidence if this student was already matched
+            # in this same image (shouldn't normally happen, but safe).
+            existing = detected_student.get(predicted_id, 0)
+            detected_student[predicted_id] = max(existing, confidence)
     return detected_student, all_students, len(encodings)
-
